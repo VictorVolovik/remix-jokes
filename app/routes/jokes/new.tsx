@@ -52,7 +52,7 @@ export const action: ActionFunction = async ({
   }
 
   const joke = await db.joke.create({
-    data: { ...fields, jokesterId: userId }
+    data: { ...fields, jokesterId: userId },
   });
 
   return redirect(`/jokes/${joke.id}`);
@@ -65,7 +65,10 @@ export default function NewJokeRoute() {
     <div>
       <p>Add your own hilarious joke</p>
 
-      <form method="post">
+      <form
+        method="post"
+        aria-describedby={actionData?.formError ? "form-error" : undefined}
+      >
         <div>
           <label>
             Name:{" "}
@@ -92,6 +95,7 @@ export default function NewJokeRoute() {
             <textarea
               defaultValue={actionData?.fields?.name}
               name="content"
+              rows={3}
               aria-invalid={
                 Boolean(actionData?.fieldErrors?.content) || undefined
               }
@@ -107,6 +111,14 @@ export default function NewJokeRoute() {
               id="content-error"
             >
               {actionData.fieldErrors.content}
+            </p>
+          ) : null}
+        </div>
+
+        <div id="form-error">
+          {actionData?.formError ? (
+            <p className="form-validation-error" role="alert">
+              {actionData?.formError}
             </p>
           ) : null}
         </div>

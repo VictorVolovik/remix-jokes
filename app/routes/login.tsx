@@ -64,14 +64,13 @@ export const action: ActionFunction = async ({ request }) => {
   switch (loginType) {
     case "login": {
       const user = await login({ username, password });
-      console.log({ user });
       if (!user) {
         return badRequest({
           fields,
-          formError: `Username/Password combination is incorrect`
+          formError: `Username/Password combination is incorrect`,
         });
       }
-      
+
       return createUserSession(user.id, redirectTo);
     }
     case "register": {
@@ -88,7 +87,7 @@ export const action: ActionFunction = async ({ request }) => {
       if (!user) {
         return badRequest({
           fields,
-          formError: `Something went wrong trying to create a new user.`
+          formError: `Something went wrong trying to create a new user.`,
         });
       }
       return createUserSession(user.id, redirectTo);
