@@ -76,6 +76,9 @@ export default function JokesRoute() {
             <Link to="new" className="button">
               Add your own
             </Link>
+            <Link to="/jokes.rss" className="rss" reloadDocument>
+               Subscribe to RSS
+            </Link>
           </div>
           <div className="jokes-outlet">
             <Outlet />
