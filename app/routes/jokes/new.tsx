@@ -1,23 +1,18 @@
-import { ActionFunction, Form, LoaderFunction } from "remix";
-import { redirect, useActionData, json, useCatch, Link } from "remix";
+import type { ActionFunction, LoaderFunction } from "remix";
+import {
+  useActionData,
+  redirect,
+  json,
+  useCatch,
+  Link,
+  Form,
+  useTransition,
+} from "remix";
+import { JokeDisplay } from "~/components/joke";
 import { db } from "~/utils/db.server";
 import { requireUserId, getUserId } from "~/utils/session.server";
 
-function validateJokeName(name: string) {
-  if (name.length < 3) {
-    return "This joke's name is too short";
-  }
-}
-
-function validateJokeContent(content: string) {
-  if (content.length < 10) {
-    return "This joke is too short";
-  }
-}
-
-export const loader: LoaderFunction = async ({
-  request
-}) => {
+export const loader: LoaderFunction = async ({ request }) => {
   const userId = await getUserId(request);
   if (!userId) {
     throw new Response("Unauthorized", { status: 401 });
@@ -25,6 +20,17 @@ export const loader: LoaderFunction = async ({
   return {};
 };
 
+function validateJokeContent(content: string) {
+  if (content.length < 10) {
+    return "That joke is too short";
+  }
+}
+
+function validateJokeName(name: string) {
+  if (name.length < 3) {
+    return "That joke's name is too short";
+  }
+}
 
 type ActionData = {
   formError?: string;
@@ -40,23 +46,21 @@ type ActionData = {
 
 const badRequest = (data: ActionData) => json(data, { status: 400 });
 
-export const action: ActionFunction = async ({
-  request,
-}): Promise<Response | ActionData> => {
+export const action: ActionFunction = async ({ request }) => {
   const userId = await requireUserId(request);
   const form = await request.formData();
   const name = form.get("name");
   const content = form.get("content");
-
   if (typeof name !== "string" || typeof content !== "string") {
-    return badRequest({ formError: "Form not submitted correctly." });
+    return badRequest({
+      formError: `Form not submitted correctly.`,
+    });
   }
 
   const fieldErrors = {
     name: validateJokeName(name),
     content: validateJokeContent(content),
   };
-
   const fields = { name, content };
   if (Object.values(fieldErrors).some(Boolean)) {
     return badRequest({ fieldErrors, fields });
@@ -65,21 +69,36 @@ export const action: ActionFunction = async ({
   const joke = await db.joke.create({
     data: { ...fields, jokesterId: userId },
   });
-
   return redirect(`/jokes/${joke.id}`);
 };
 
 export default function NewJokeRoute() {
   const actionData = useActionData<ActionData>();
+  const transition = useTransition();
+
+  if (transition.submission) {
+    const name = transition.submission.formData.get("name");
+    const content = transition.submission.formData.get("content");
+    if (
+      typeof name === "string" &&
+      typeof content === "string" &&
+      !validateJokeContent(content) &&
+      !validateJokeName(name)
+    ) {
+      return (
+        <JokeDisplay
+          joke={{ name, content }}
+          isOwner={true}
+          canDelete={false}
+        />
+      );
+    }
+  }
 
   return (
     <div>
       <p>Add your own hilarious joke</p>
-
-      <Form
-        method="post"
-        aria-describedby={actionData?.formError ? "form-error" : undefined}
-      >
+      <Form method="post">
         <div>
           <label>
             Name:{" "}
@@ -99,14 +118,12 @@ export default function NewJokeRoute() {
             </p>
           ) : null}
         </div>
-
         <div>
           <label>
             Content:{" "}
             <textarea
-              defaultValue={actionData?.fields?.name}
+              defaultValue={actionData?.fields?.content}
               name="content"
-              rows={3}
               aria-invalid={
                 Boolean(actionData?.fieldErrors?.content) || undefined
               }
@@ -125,15 +142,6 @@ export default function NewJokeRoute() {
             </p>
           ) : null}
         </div>
-
-        <div id="form-error">
-          {actionData?.formError ? (
-            <p className="form-validation-error" role="alert">
-              {actionData?.formError}
-            </p>
-          ) : null}
-        </div>
-
         <div>
           <button type="submit" className="button">
             Add
@@ -157,7 +165,9 @@ export function CatchBoundary() {
   }
 }
 
-export function ErrorBoundary() {
+export function ErrorBoundary({ error }: { error: Error }) {
+  console.error(error);
+
   return (
     <div className="error-container">
       Something unexpected went wrong. Sorry about that.
