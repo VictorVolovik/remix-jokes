@@ -3,6 +3,14 @@ import { redirect, useActionData, json } from "remix";
 import { db } from "~/utils/db.server";
 import { requireUserId } from "~/utils/session.server";
 
+export function ErrorBoundary() {
+  return (
+    <div className="error-container">
+      Something unexpected went wrong. Sorry about that.
+    </div>
+  );
+}
+
 function validateJokeName(name: string) {
   if (name.length < 3) {
     return "This joke's name is too short";

@@ -14,6 +14,14 @@ export const links: LinksFunction = () => {
   ];
 };
 
+export function ErrorBoundary() {
+  return (
+    <div className="error-container">
+      I did a lot of whoopsies.
+    </div>
+  );
+}
+
 type LoaderData = {
   user: User | null;
   jokeListItems: Array<Pick<Joke, "id" | "name">>;
