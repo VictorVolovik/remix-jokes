@@ -1,4 +1,4 @@
-import type { ActionFunction, LoaderFunction } from "remix";
+import { ActionFunction, Form, LoaderFunction } from "remix";
 import { redirect, useActionData, json, useCatch, Link } from "remix";
 import { db } from "~/utils/db.server";
 import { requireUserId, getUserId } from "~/utils/session.server";
@@ -76,7 +76,7 @@ export default function NewJokeRoute() {
     <div>
       <p>Add your own hilarious joke</p>
 
-      <form
+      <Form
         method="post"
         aria-describedby={actionData?.formError ? "form-error" : undefined}
       >
@@ -139,7 +139,7 @@ export default function NewJokeRoute() {
             Add
           </button>
         </div>
-      </form>
+      </Form>
     </div>
   );
 }
